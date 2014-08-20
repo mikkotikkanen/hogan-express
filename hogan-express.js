@@ -47,6 +47,25 @@
     result = {};
     for (name in partials) {
       path = partials[name];
+      if (typeof path == 'function') {
+        count++;
+        (function(name, path) {
+          path(function(err, str) {
+            if (!count) {
+              return;
+            }
+            if (err) {
+              count = 0;
+              fn(err);
+            }
+            result[name] = str;
+            if (!--count) {
+              return fn(null, result);
+            }
+          });
+        })(name, path)
+        continue;
+      }
       if (typeof path !== 'string') {
         continue;
       }
