@@ -16,6 +16,8 @@
   __extends($, require('util'));
 
   __extends($, require('path'));
+  
+  __extends($, require('request'));
 
   hogan = require('hogan.js');
 
@@ -48,6 +50,25 @@
     for (name in partials) {
       path = partials[name];
       if (typeof path !== 'string') {
+        continue;
+      }
+      if (/^https?:\/\//.test(path)) {
+        count++;
+        (function(name, path) {
+          $.get(path, function(err, response, str) {
+            if (!count) {
+              return;
+            }
+            if (err) {
+              count = 0;
+              fn(err);
+            }
+            result[name] = str;
+            if (!--count) {
+              return fn(null, result);
+            }
+          });
+        })(name, path)
         continue;
       }
       if (!$.extname(path)) {
